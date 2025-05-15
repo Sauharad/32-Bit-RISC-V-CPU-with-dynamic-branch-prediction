@@ -12,7 +12,6 @@ A Verilog-based, five-stage pipelined RISC-V processor core implementing the RV3
   - [Instruction Cache](#instruction-cache)
 - [Simulation and Testing](#simulation-and-testing)
 - [Future Work](#future-work)
-- [License](#license)
 
 ---
 
