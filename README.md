@@ -88,4 +88,4 @@ Simulation is carried out using AMD Vivado’s simulation environment. Functiona
 
 - RISC-V ISA Specifications: [riscv.org](https://riscv.org/specifications/)
 - Vivado Design Suite by AMD/Xilinx
-**
+
