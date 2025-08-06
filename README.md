@@ -1,6 +1,6 @@
 **# 32-Bit RISC-V CPU with Dynamic Branch Prediction and Instruction Cache
 
-A Verilog-based, five-stage pipelined RISC-V processor core implementing the RV32I instruction set. The design features dynamic branch prediction using a Branch History Table (BHT) and Branch Target Buffer (BTB), as well as a single-level, set-associative instruction cache. Developed and simulated using AMD Vivado 2024.2.
+A Verilog-based, five-stage pipelined RISC-V processor core implementing the RV32I instruction set. The design features dynamic branch prediction using a Branch History Table (BHT) and Branch Target Buffer (BTB). Developed and simulated using AMD Vivado 2024.2.
 
 ---
 
@@ -9,7 +9,6 @@ A Verilog-based, five-stage pipelined RISC-V processor core implementing the RV3
   - [Pipeline Design](#pipeline-design)
   - [Hazard Resolution](#hazard-resolution)
   - [Branch Prediction](#branch-prediction)
-  - [Instruction Cache](#instruction-cache)
 - [Simulation and Testing](#simulation-and-testing)
 - [Future Work](#future-work)
 
@@ -45,14 +44,6 @@ Dynamic branch prediction is achieved using:
   - Stores predicted target addresses of recent branches
   - If both BHT and BTB indicate a taken branch, the PC is updated with the predicted PC (PPC)
 
-### Instruction Cache
-
-- 4-way set associative design with 32-byte blocks
-- Cache access occurs in the IF stage
-- On a cache **hit**, the instruction is fetched in a single cycle
-- On a **miss**, a cache miss signal is raised, and the appropriate block is requested from instruction memory
-- Once updated, instruction fetch proceeds from the cache
-
 ---
 
 ## Simulation and Testing
@@ -69,7 +60,7 @@ Simulation is carried out using AMD Vivado’s simulation environment. Functiona
 ## Future Work
 
 ### Short-Term Goals
-- Implementation of a **data cache**
+- Implementation of **cache**
 - Integration of a **UART peripheral** for serial I/O
 
 ### Long-Term Goals
