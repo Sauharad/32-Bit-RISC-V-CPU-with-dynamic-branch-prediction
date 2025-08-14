@@ -17,8 +17,6 @@
 
 module datapath(input wire start,
                 input wire clk,
-                input wire [31:0] icache_fetch,
-                input wire icache_read_again,
                 input wire ALUSrc,
                 input wire [4:0] ALUOp,
                 input wire PCSrcCont,
@@ -31,7 +29,6 @@ module datapath(input wire start,
                 input wire btb_update,
                 input wire bht_update_dir,
                 output reg [31:0] PC,
-                output reg send_cache_read,
                 output wire [6:0] opcode,
                 output wire [2:0] funct3,
                 output wire [6:0] funct7,
@@ -48,7 +45,8 @@ localparam [6:0] OP_REG = 7'b0110011,OP_LW = 7'b0000011,OP_SW = 7'b0100011,OP_B 
 
 
 wire [31:0] PPC;
-reg [31:0] Data_Mem [0:16383];
+reg [7:0] Data_Mem [0:16383];
+reg [7:0] Inst_Mem [0:16383];
 reg [31:0] reg_file [0:31];
 
 wire bht_hit,btb_hit,branch_pred;
@@ -68,8 +66,8 @@ reg [4:0] ID_EX_ALUOp;
 
 wire signed [31:0] imm_gen_out;
 wire [31:0] ALU_A,ALU_B,rs2_forw;
-wire [31:0] BR_A,BR_B,BR_verify_A,BR_verify_B;
-wire BR_Test,BR_verify_test;
+wire [31:0] BR_A,BR_B;
+wire BR_Test;
 
 
 reg [31:0] EX_MEM_IR,EX_MEM_PC,EX_MEM_ALUOut,EX_MEM_rs2; wire [31:0] ex_mem_aluout;
@@ -156,14 +154,18 @@ always @(posedge clk)
         if (IsStall)
             begin
                 PC <= PC;
-                if (icache_read_again)
-                    send_cache_read <= 1'b1;
-                else
-                    send_cache_read <= 1'b0;
+                IF_ID_IR <= IF_ID_IR;
+                IF_ID_PC <= IF_ID_PC;
+                
             end
         if (!IsStall)
             begin
-                send_cache_read <= 1'b1;
+                
+                IF_ID_IR <= {Inst_Mem[PC],Inst_Mem[PC+1],Inst_Mem[PC+2],Inst_Mem[PC+3]};
+                IF_ID_PC <= PC; 
+                bpu_up_to <= IF_ID_PC;
+                bpu_up_target <= ID_BR_PC;
+                
                 if (ID_PCSrc)
                     begin
                         if (!IF_ID_branch_pred)
@@ -202,27 +204,8 @@ always @(posedge clk)
                         
                     end
             end
-        
         IF_ID_branch_pred <= branch_pred;
         
-        
-        if (IsStall)
-            begin
-                IF_ID_IR <= IF_ID_IR;
-                IF_ID_PC <= IF_ID_PC;
-            end
-        if (!IsStall)
-            begin
-                IF_ID_IR <= icache_fetch;
-                IF_ID_PC <= PC;
-            end
-        
-        
-        if (!IsStall)
-            begin
-                bpu_up_to <= IF_ID_PC;
-                bpu_up_target <= ID_BR_PC;
-            end
         
         ID_EX_IR <=  IF_ID_IR;
         ID_EX_PC <= IF_ID_PC;
