@@ -3,7 +3,7 @@
 /* This tesbench inserts instructions into the CPU's main memory
    
    The instructions have been chosen to ensure that the functioning of all the module within the design i.e. the pipeline operation,
-   the cache, the branch prediction unit, the hazard units all get tested.
+   the cache, the branch prediction unit, the hazard units is involved and tested.
    
 */
 
@@ -17,18 +17,8 @@ wire [31:0] regfile [0:31] = DUT.riscv_datapath.reg_file;
 wire [31:0] PC = DUT.riscv_datapath.PC;
 wire [31:0] PPC = DUT.riscv_datapath.PPC;
 
-wire [7:0] Inst_Mem [0:255] = DUT.riscv_instmem.Inst_Mem;
-wire imem_read = DUT.imem_read;
-wire imem_valid = DUT.imem_valid;
-
-wire [0:23] ICache_VTP [0:63] [0:3] = DUT.riscv_icache.ICache_VTP;
-wire [0:31] ICache_Data [0:63] [0:3] [0:7] = DUT.riscv_icache.ICache_Data;
-
-wire icache_read = DUT.datapath_to_icache_read;
-wire icache_read_again = DUT.icache_read_again;
-wire cache_hit = DUT.icache_hit;
-wire [31:0] cache_fetch = DUT.icache_fetch;
-wire icache_updated = DUT.icache_update_occured;
+wire [7:0] Inst_Mem [0:16383] = DUT.riscv_datapath.Inst_Mem;
+wire [7:0] Data_Mem [0:16383] = DUT.riscv_datapath.Data_Mem;
 
 wire [1:0] bht [0:31] = DUT.riscv_datapath.riscv_bht.BHTable;
 wire [0:50] btb [0:31] [0:3] = DUT.riscv_datapath.riscv_btb.BTBuffer;
@@ -135,41 +125,41 @@ end
 
 initial
 begin
-    DUT.riscv_instmem.Inst_Mem[0] = 8'h00;  // add x2,x1,x0
-    DUT.riscv_instmem.Inst_Mem[1] = 8'h10;
-    DUT.riscv_instmem.Inst_Mem[2] = 8'h01;
-    DUT.riscv_instmem.Inst_Mem[3] = 8'h33;
+    DUT.riscv_datapath.Inst_Mem[0] = 8'h00;  // add x2,x1,x0
+    DUT.riscv_datapath.Inst_Mem[1] = 8'h10;
+    DUT.riscv_datapath.Inst_Mem[2] = 8'h01;
+    DUT.riscv_datapath.Inst_Mem[3] = 8'h33;
     
     
-    DUT.riscv_instmem.Inst_Mem[4] = 8'h40; //sub x3 x2 x1
-    DUT.riscv_instmem.Inst_Mem[5] = 8'h20;
-    DUT.riscv_instmem.Inst_Mem[6] = 8'h81;
-    DUT.riscv_instmem.Inst_Mem[7] = 8'hB3;
+    DUT.riscv_datapath.Inst_Mem[4] = 8'h40; //sub x3 x2 x1
+    DUT.riscv_datapath.Inst_Mem[5] = 8'h20;
+    DUT.riscv_datapath.Inst_Mem[6] = 8'h81;
+    DUT.riscv_datapath.Inst_Mem[7] = 8'hB3;
     
-    DUT.riscv_instmem.Inst_Mem[8] = 8'h00; //and x4 x2 x1
-    DUT.riscv_instmem.Inst_Mem[9] = 8'h20;
-    DUT.riscv_instmem.Inst_Mem[10] = 8'hF2;
-    DUT.riscv_instmem.Inst_Mem[11] = 8'h33;
+    DUT.riscv_datapath.Inst_Mem[8] = 8'h00; //and x4 x2 x1
+    DUT.riscv_datapath.Inst_Mem[9] = 8'h20;
+    DUT.riscv_datapath.Inst_Mem[10] = 8'hF2;
+    DUT.riscv_datapath.Inst_Mem[11] = 8'h33;
     
-    DUT.riscv_instmem.Inst_Mem[12] = 8'h02; //jal to PC=76, link to x4
-    DUT.riscv_instmem.Inst_Mem[13] = 8'h00;
-    DUT.riscv_instmem.Inst_Mem[14] = 8'h02;
-    DUT.riscv_instmem.Inst_Mem[15] = 8'h6F;
+    DUT.riscv_datapath.Inst_Mem[12] = 8'h02; //jal to PC=76, link to x4
+    DUT.riscv_datapath.Inst_Mem[13] = 8'h00;
+    DUT.riscv_datapath.Inst_Mem[14] = 8'h02;
+    DUT.riscv_datapath.Inst_Mem[15] = 8'h6F;
     
-    DUT.riscv_instmem.Inst_Mem[16] = 8'h00; //will not be executed if execution is correct and jal works properly
-    DUT.riscv_instmem.Inst_Mem[17] = 8'h10;
-    DUT.riscv_instmem.Inst_Mem[18] = 8'h02;
-    DUT.riscv_instmem.Inst_Mem[19] = 8'hB3;
+    DUT.riscv_datapath.Inst_Mem[16] = 8'h00; //will not be executed if execution is correct and jal works properly
+    DUT.riscv_datapath.Inst_Mem[17] = 8'h10;
+    DUT.riscv_datapath.Inst_Mem[18] = 8'h02;
+    DUT.riscv_datapath.Inst_Mem[19] = 8'hB3;
     
-    DUT.riscv_instmem.Inst_Mem[76] = 8'h00; //lw x6, x4(0)
-    DUT.riscv_instmem.Inst_Mem[77] = 8'h02;
-    DUT.riscv_instmem.Inst_Mem[78] = 8'h23;
-    DUT.riscv_instmem.Inst_Mem[79] = 8'h03;
+    DUT.riscv_datapath.Inst_Mem[76] = 8'h00; //lw x6, x4(0)
+    DUT.riscv_datapath.Inst_Mem[77] = 8'h02;
+    DUT.riscv_datapath.Inst_Mem[78] = 8'h23;
+    DUT.riscv_datapath.Inst_Mem[79] = 8'h03;
     
-    DUT.riscv_instmem.Inst_Mem[80] = 8'h82; // beq x10,x9 to PC=0
-    DUT.riscv_instmem.Inst_Mem[81] = 8'hA4;
-    DUT.riscv_instmem.Inst_Mem[82] = 8'h84;
-    DUT.riscv_instmem.Inst_Mem[83] = 8'h63;
+    DUT.riscv_datapath.Inst_Mem[80] = 8'h82; // beq x10,x9 to PC=0
+    DUT.riscv_datapath.Inst_Mem[81] = 8'hA4;
+    DUT.riscv_datapath.Inst_Mem[82] = 8'h84;
+    DUT.riscv_datapath.Inst_Mem[83] = 8'h63;
     
     DUT.riscv_datapath.reg_file[0] = 32'h00000000;
     DUT.riscv_datapath.reg_file[1] = 32'h00000004;
@@ -179,7 +169,7 @@ begin
     DUT.riscv_datapath.Data_Mem[16] = 32'h00000010;    
     
     #5.5 start = 1;
-    #100 DUT.riscv_datapath.reg_file[10] = 32'h0000000C;
+    //#100 DUT.riscv_datapath.reg_file[10] = 32'h0000000C;
     #200 $finish;
 end
 endmodule
