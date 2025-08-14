@@ -2,8 +2,7 @@
 
 /*The control unit has 3 primary responsibilities:
     1. Send control signals to the execution pipeline after receiving the decoded opcode and operands. Also send stall signals if a hazard occurs
-    2. Send read to memory in case of a cache miss and stall the pipeline until data is available
-    3. Send update signals to the Branch History Table and Branch Target Buffer according to branch execution and prediction success/failure
+    2. Send update signals to the Branch History Table and Branch Target Buffer according to branch execution and prediction success/failure
     
     
     
@@ -38,16 +37,9 @@
     present, there can still be a need for stalls in case of a load-use hazard. 
     As the branch decoding and execution in this core occurs during ID stage, conditional branches may also need stalls until data forwarding units
     are able to provide the operands.
-    
-    
-    
-2. The control unit receives the cache miss signal from cache during the IF stage, and immediately tell the pipeline to stall, simultaneously sending a read
-   request to the instruction memory.
-   When the cache receives the requested data, it sends a cache_updated signal to the control unit. In response to this, the control unit commands the datapath
-   to send another read request to the cache, and ends the pipeline stall after the instruction has been successfully fetched.
    
 
-3. If a branch instruction is executed for the first, wthe control unit sends the updation signals to the BHT and BTB to register the branch.
+2. If a branch instruction is executed for the first, wthe control unit sends the updation signals to the BHT and BTB to register the branch.
    Updation signals are also sent when a branch prediction gets tested and known to be correct/incorrect.
    
 
@@ -55,10 +47,8 @@
 
 
 
-module controlpath(inout wire start,
+    module controlpath(inout wire start,
                    input wire clk,
-                   input wire cache_hit,
-                   input wire cache_update_occured,
                    input wire [6:0] opcode,
                    input wire [2:0] funct3,
                    input wire [6:0] funct7,
@@ -70,8 +60,6 @@ module controlpath(inout wire start,
                    input wire prediction_false_flag,
                    input wire IF_ID_branch_pred,
                    input wire ID_PCSrc,
-                   output reg imem_read,
-                   output reg icache_read_again,
                    output reg [4:0] ALUOp,
                    output reg ALUSrc,
                    output reg PCSrcCont,
@@ -87,67 +75,6 @@ module controlpath(inout wire start,
                    
 localparam [6:0] OP_REG = 7'b0110011,OP_LW = 7'b0000011,OP_SW = 7'b0100011,OP_B = 7'b1100011,OP_JAL = 7'b1101111;
 
-reg send_imem_read_counter;
-reg [1:0] icache_read_again_counter;
-reg icache_read_again_parity;
-
-/* Below logic is to send a read request pulse that lasts one cycle, to the instruction memory when cache miss occurs.
-   send_imem_read_counter is a 1 bit counter, reset whenever cache miss occurs. After the read request has been sent, the counter gets set and
-   the read signal is pulled down.
-*/
-always @(posedge clk)
-    if (send_imem_read_counter == 1'b0)
-        begin
-            send_imem_read_counter <= 1'b1;
-            imem_read <= 1'b0;
-        end        
-
-always @(*)
-    if (!cache_hit)
-        begin
-            imem_read = 1'b1;
-            send_imem_read_counter = 1'b0;
-        end
-
-/* When the cache gets updated after a miss, the processor is still stalling. If the stall is ended immediately, the PC will have changed when the read request 
-   is sent, as PC updation and cache read requests are in parallel. This way, the first instruction of every block gets lost.
-   To prevent this, it is neccesary that the read request is sent by datapath to cache before the stall has ended, and the below logic does this with
-   send_read_again and send_read_again_counter.
-*/
-
-always @(*)
-    if (start)
-        icache_read_again_counter = 2'b00;
-
-always @(posedge clk)
-    if (icache_read_again_counter < 2'b10 && icache_read_again_parity)
-            icache_read_again_counter <= icache_read_again_counter + 1;
-
-always @(*)
-    begin
-        if (cache_update_occured)
-            begin
-                icache_read_again_counter = 2'b00;
-                icache_read_again = 1'b1;
-                icache_read_again_parity = 1'b1;
-            end
-        if (icache_read_again_counter == 2'b10)
-            begin
-                IsStall = 1'b0;
-                icache_read_again_parity = 1'b0;
-                icache_read_again = 1'b0;
-                icache_read_again_counter = 2'b00;
-            end
-    end
-
-/* Control signals initialized to 0 at startup, and are updated with each instruction decode.
-   Stall logic is also included here, with stalls needed by load-use hazards and when conditional branches wait for their operands.
-   
-   Also, when a branch instruction is executed or a prediction is false and pipeline needs to roll back, one extra instruction gets fetched while the PC
-   gets updated. The branch_flag and prediction_false_flag signals are sent by datapath when this happens, so that the control signals can be deasserted
-   and the instruction does not execute.
-*/
-
 always @(*)
     begin
         if (start)
@@ -161,7 +88,7 @@ always @(*)
                 PCSrcCont = 1'b0;
                 ALUOp = 5'b11111;
             end
-        if (!load_stall && !br_stall[0] && !br_stall_prev[1] && cache_hit)
+        if (!load_stall && !br_stall[0] && !br_stall_prev[1])
             begin
                 IsStall = 1'b0;
                 if (branch_flag || prediction_false_flag)
@@ -249,7 +176,7 @@ always @(*)
                         endcase
                     end 
             end
-        if (load_stall || br_stall || br_stall_prev[1] || (!cache_hit && (icache_read_again_counter != 2'b10)))
+        if (load_stall || br_stall || br_stall_prev[1])
             begin
                 RegWrite = 1'b0;
                 MemWrite = 1'b0;
